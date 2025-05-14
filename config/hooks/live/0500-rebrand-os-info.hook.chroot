@@ -1,0 +1,98 @@
+#!/bin/sh
+
+# Update os-release file
+cat > /etc/os-release << EOF
+NAME="NabadOS"
+VERSION="1.0"
+ID=nabados
+ID_LIKE=debian
+PRETTY_NAME="NabadOS 1.0"
+VERSION_ID="1.0"
+HOME_URL="https://nabados.org/"
+SUPPORT_URL="https://support.nabados.org/"
+BUG_REPORT_URL="https://bugs.nabados.org/"
+EOF
+
+# Create lsb-release file
+cat > /etc/lsb-release << EOF
+DISTRIB_ID=NabadOS
+DISTRIB_RELEASE=1.0
+DISTRIB_CODENAME=soplang
+DISTRIB_DESCRIPTION="NabadOS 1.0"
+EOF
+
+# Update issue files
+echo "NabadOS 1.0 \\n \\l" > /etc/issue
+echo "NabadOS 1.0" > /etc/issue.net
+
+# Create GNOME about dialog branding
+mkdir -p /usr/share/gnome-control-center/pixmaps
+cp /usr/share/pixmaps/nabados-about-dialog.png /usr/share/gnome-control-center/pixmaps/about-logo.png
+
+# Create a custom About page for Settings
+mkdir -p /usr/share/applications
+cat > /usr/share/applications/nabados-about.desktop << EOF
+[Desktop Entry]
+Name=About NabadOS
+Comment=Information about NabadOS
+Exec=gnome-control-center info-overview
+Icon=nabados-logo
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Settings;X-GNOME-Settings-Panel;X-GNOME-AboutSettings;
+OnlyShowIn=GNOME;Unity;
+StartupNotify=true
+X-GNOME-Settings-Panel=info-overview
+EOF
+
+# Create custom distro-info files
+mkdir -p /usr/share/distro-info
+cat > /usr/share/distro-info/nabados.csv << EOF
+version,codename,series,created,release,eol
+1.0,soplang,soplang,$(date +%Y-%m-%d),$(date +%Y-%m-%d),
+EOF
+
+# Create custom issue file for MOTD
+mkdir -p /etc/update-motd.d
+cat > /etc/update-motd.d/00-header << EOF
+#!/bin/sh
+echo
+echo "Welcome to NabadOS 1.0 (Soplang)"
+echo
+EOF
+chmod +x /etc/update-motd.d/00-header
+
+# Replace Debian-specific branding files
+find /usr/share/pixmaps -name "debian-logo*" -exec sh -c 'ln -sf /usr/share/pixmaps/nabados-logo.png {}' \;
+
+# Replace Firefox branding (if installed)
+if [ -d "/usr/lib/firefox/" ]; then
+  mkdir -p /usr/lib/firefox/browser/defaults/preferences
+  cat > /usr/lib/firefox/browser/defaults/preferences/vendor.js << EOF
+// NabadOS Firefox preferences
+pref("browser.startup.homepage", "https://nabados.org/");
+pref("browser.startup.homepage_reset", "https://nabados.org/");
+pref("app.distributor", "NabadOS");
+pref("app.distributor.channel", "NabadOS");
+EOF
+fi
+
+# Update GRUB branding
+if [ -f "/etc/default/grub" ]; then
+  sed -i 's/GRUB_DISTRIBUTOR=.*$/GRUB_DISTRIBUTOR="NabadOS"/' /etc/default/grub
+  update-grub || true
+fi
+
+# Update desktop files for system utilities
+find /usr/share/applications -name "*.desktop" -type f -exec sed -i 's/Debian/NabadOS/g' {} \;
+
+# Create about file
+mkdir -p /usr/share/nabados
+cat > /usr/share/nabados/about << EOF
+NabadOS 1.0 (Soplang)
+
+NabadOS is a custom Linux distribution based on Debian,
+featuring the Soplang brand identity and custom tools.
+
+Website: https://nabados.org
+EOF 

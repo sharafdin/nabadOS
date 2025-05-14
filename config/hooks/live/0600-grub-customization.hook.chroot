@@ -1,0 +1,134 @@
+#!/bin/sh
+
+# Install packages needed for GRUB theme
+apt-get update
+apt-get install -y grub-common grub2-common grub-pc-bin
+
+# Create directories for GRUB theme
+mkdir -p /boot/grub/themes/nabados
+
+# Create GRUB theme.txt
+cat > /boot/grub/themes/nabados/theme.txt << EOF
+# NabadOS GRUB theme
+
+# Global settings
+title-text: "NabadOS"
+title-color: "#ffffff"
+message-color: "#ffffff"
+message-bg-color: "#418fde"
+desktop-image: "background.png"
+desktop-color: "#000000"
+terminal-box: "terminal_box_*.png"
+terminal-font: "DejaVu Sans Mono Regular 12"
+
+# Boot menu settings
++ boot_menu {
+  left = 15%
+  width = 70%
+  top = 30%
+  height = 40%
+  item_height = 32
+  item_spacing = 8
+  icon_width = 32
+  icon_height = 32
+  item_color = "#cccccc"
+  selected_item_color = "#ffffff"
+  selected_item_pixmap_style = "select_*.png"
+  item_icon_space = 8
+  menu_pixmap_style = "menu_box_*.png"
+  scrollbar = true
+  scrollbar_width = 10
+  scrollbar_thumb = "scrollbar_thumb_*.png"
+}
+
+# Progress bar for boot process
++ progress_bar {
+  id = "__timeout__"
+  left = 15%
+  width = 70%
+  top = 75%
+  height = 20
+  bg_color = "#444444"
+  fg_color = "#418fde"
+  border_color = "#ffffff"
+  text_color = "#ffffff"
+  show_text = true
+  font = "DejaVu Sans Regular 10"
+  text = "@TIMEOUT_NOTIFICATION_LONG@"
+}
+
+# Custom info text
++ label {
+  left = 0
+  width = 100%
+  top = 85%
+  height = 40
+  align = "center"
+  color = "#ffffff"
+  font = "DejaVu Sans Regular 10"
+  text = "Powered by Soplang"
+}
+
+# NabadOS logo at bottom
++ image {
+  left = 50%-32
+  top = 95%-32
+  width = 64
+  height = 64
+  file = "logo.png"
+}
+EOF
+
+# Create assets for the GRUB theme
+# Background with gradient matching brand color
+convert -size 1920x1080 -define gradient:angle=45 gradient:#418fde-#2a5c8e /boot/grub/themes/nabados/background.png
+
+# Copy the Soplang logo for GRUB
+cp /usr/share/nabados/soplang-logo.png /boot/grub/themes/nabados/logo.png
+
+# Create selection highlight images
+for shape in select menu_box scrollbar_thumb terminal_box; do
+  for state in n s e w ne nw se sw; do
+    if [ "$shape" = "select" ]; then
+      # Selection highlight with brand color
+      convert -size 8x8 xc:#418fde /boot/grub/themes/nabados/${shape}_${state}.png
+    elif [ "$shape" = "scrollbar_thumb" ]; then
+      # Scrollbar with brand color
+      convert -size 8x8 xc:#418fde /boot/grub/themes/nabados/${shape}_${state}.png
+    elif [ "$shape" = "menu_box" ] || [ "$shape" = "terminal_box" ]; then
+      # Semi-transparent black background for menus and terminal
+      convert -size 8x8 xc:"rgba(0,0,0,0.7)" /boot/grub/themes/nabados/${shape}_${state}.png
+    fi
+  done
+done
+
+# Update GRUB configuration
+cat > /etc/default/grub << EOF
+# GRUB configuration for NabadOS
+
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="NabadOS"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+GRUB_CMDLINE_LINUX=""
+GRUB_THEME="/boot/grub/themes/nabados/theme.txt"
+GRUB_BACKGROUND="/boot/grub/themes/nabados/background.png"
+GRUB_GFXMODE=1024x768
+GRUB_GFXPAYLOAD_LINUX=keep
+
+# Uncomment to disable graphical terminal
+#GRUB_TERMINAL=console
+
+# Uncomment if you want GRUB to pass to the kernel the old parameter
+# format "root=/dev/xxx" instead of "root=UUID=xxx"
+#GRUB_DISABLE_LINUX_UUID=true
+
+# Uncomment to disable generation of recovery mode menu entries
+GRUB_DISABLE_RECOVERY="true"
+
+# Uncomment to disable submenu
+GRUB_DISABLE_SUBMENU=y
+EOF
+
+# Update GRUB to apply changes
+update-grub || true 
