@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Create directories
+mkdir -p /usr/share/nabados
+
+# Export one of the SVG logos from our source
+cp -f /soplang-logo/soplong\ logo-01.svg /soplang-logo.svg
+
+# Export one of the PNG logos from our source  
+cp -f /soplang-logo/sop\ logo-03.png /soplang-logo.png
+
+# Make these files available for other hooks
+chmod 644 /soplang-logo.svg
+chmod 644 /soplang-logo.png 

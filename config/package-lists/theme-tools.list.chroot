@@ -1,0 +1,10 @@
+imagemagick
+librsvg2-bin
+fonts-dejavu
+fonts-cantarell
+sassc
+libglib2.0-dev-bin
+gtk-update-icon-cache
+dconf-cli
+gnome-shell-extensions
+gnome-tweaks 

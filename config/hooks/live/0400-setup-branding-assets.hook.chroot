@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# Create necessary directories
+mkdir -p /usr/share/nabados
+mkdir -p /usr/share/backgrounds
+mkdir -p /usr/share/icons/hicolor/scalable/apps
+mkdir -p /usr/share/pixmaps
+mkdir -p /usr/share/icons/hicolor/256x256/apps
+
+# Copy the Soplang logo from source directory
+cp -f /soplang-logo.svg /usr/share/nabados/soplang-logo.svg
+cp -f /soplang-logo.png /usr/share/nabados/soplang-logo.png
+
+# Create symlinks for various system locations
+ln -sf /usr/share/nabados/soplang-logo.svg /usr/share/icons/hicolor/scalable/apps/nabados-logo.svg
+ln -sf /usr/share/nabados/soplang-logo.png /usr/share/icons/hicolor/256x256/apps/nabados-logo.png
+ln -sf /usr/share/nabados/soplang-logo.png /usr/share/pixmaps/nabados-logo.png
+
+# Create background images using the Soplang logo and brand color
+# Main desktop wallpaper - simple gradient with logo
+convert -size 3840x2160 -define gradient:angle=45 gradient:#418fde-#2a5c8e \
+  /usr/share/nabados/soplang-logo.png -gravity center -composite \
+  /usr/share/backgrounds/nabados-wallpaper.jpg
+
+# Login screen background - darker version
+convert -size 3840x2160 -define gradient:angle=45 gradient:#2a5c8e-#1a3652 \
+  /usr/share/nabados/soplang-logo.png -gravity center -composite \
+  /usr/share/backgrounds/nabados-login.jpg
+
+# About dialog image
+convert -size 1280x720 -define gradient:angle=45 gradient:#418fde-#2a5c8e \
+  /usr/share/nabados/soplang-logo.png -gravity center -composite \
+  /usr/share/pixmaps/nabados-about.png
+
+# Create a lower resolution version for GNOME's about dialog
+convert /usr/share/pixmaps/nabados-about.png -resize 640x360 \
+  /usr/share/pixmaps/nabados-about-dialog.png
+
+# Create various sized icons
+for size in 16 22 24 32 48 64 96 128 256 512; do
+  mkdir -p /usr/share/icons/hicolor/${size}x${size}/apps
+  convert /usr/share/nabados/soplang-logo.png -resize ${size}x${size} \
+    /usr/share/icons/hicolor/${size}x${size}/apps/nabados-logo.png
+done
+
+# Update icon cache
+gtk-update-icon-cache -f /usr/share/icons/hicolor/ || true
+
+# Update wallpaper settings if needed
+gsettings set org.gnome.desktop.background picture-uri "file:///usr/share/backgrounds/nabados-wallpaper.jpg" || true
+gsettings set org.gnome.desktop.background picture-uri-dark "file:///usr/share/backgrounds/nabados-wallpaper.jpg" || true 
