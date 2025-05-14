@@ -1,0 +1,214 @@
+#!/bin/sh
+
+# Create directory structure for the theme
+mkdir -p /usr/share/themes/NabadOS/gnome-shell
+
+# Create the GNOME Shell theme CSS
+cat > /usr/share/themes/NabadOS/gnome-shell/gnome-shell.css << EOF
+/* NabadOS GNOME Shell Theme - Based on Soplang branding */
+
+/* Panel (top bar) */
+#panel {
+  background-color: rgba(65, 143, 222, 0.95);
+  border-bottom: 1px solid rgba(65, 143, 222, 0.4);
+  font-weight: bold;
+}
+
+#panel .panel-button {
+  color: white;
+}
+
+#panel .panel-button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+#panel .panel-button:active, #panel .panel-button:overview, 
+#panel .panel-button:focus, #panel .panel-button:checked {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Overview */
+.search-entry {
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 12px;
+}
+
+.search-entry:focus {
+  border: 1px solid #418fde;
+  background-color: white;
+}
+
+/* Window overview */
+.window-picker {
+  spacing: 12px;
+}
+
+.window-caption {
+  background-color: #418fde;
+  color: white;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+/* App Grid */
+.app-folder-dialog {
+  border-radius: 12px;
+  background-color: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-folder-popup {
+  background-color: rgba(0, 0, 0, 0.65);
+  border-radius: 8px;
+}
+
+/* Calendar popup */
+.calendar {
+  border-radius: 8px;
+  padding: 10px;
+  background-color: rgba(25, 25, 25, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calendar-month-label {
+  color: white;
+  font-weight: bold;
+  font-size: 12pt;
+}
+
+.calendar-day-base {
+  font-size: 10pt;
+  border-radius: 18px;
+  padding: 4px;
+}
+
+.calendar-day-base:active,
+.calendar-day-base:selected {
+  background-color: #418fde;
+  color: white;
+}
+
+/* Message list */
+.message-list {
+  border-radius: 8px;
+  background-color: rgba(30, 30, 30, 0.95);
+}
+
+.message {
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 4px 8px;
+}
+
+.message:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dash */
+#dash {
+  background-color: rgba(0, 0, 0, 0.65);
+  border-radius: 0px 12px 12px 0px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: none;
+}
+
+.dash-item-container .app-well-app:hover .overview-icon,
+.dash-item-container .app-well-app:focus .overview-icon {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.dash-item-container .app-well-app:active .overview-icon,
+.dash-item-container .app-well-app:checked .overview-icon {
+  background-color: #418fde;
+}
+
+/* Dialogs */
+.modal-dialog {
+  border-radius: 12px;
+  background-color: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+}
+
+.modal-dialog-button {
+  border-radius: 4px;
+  padding: 6px 12px;
+}
+
+.modal-dialog-button:active,
+.modal-dialog-button:checked {
+  background-color: #418fde;
+  color: white;
+}
+EOF
+
+# Create the index.theme file
+cat > /usr/share/themes/NabadOS/index.theme << EOF
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=NabadOS
+Comment=NabadOS theme with Soplang branding
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=Adwaita
+IconTheme=Adwaita
+CursorTheme=Adwaita
+CursorSize=24
+EOF
+
+# Set the GNOME Shell theme system-wide
+mkdir -p /etc/dconf/db/local.d
+cat > /etc/dconf/db/local.d/01-theme << EOF
+[org/gnome/shell/extensions/user-theme]
+name='NabadOS'
+
+[org/gnome/desktop/interface]
+gtk-theme='Adwaita'
+icon-theme='Adwaita'
+cursor-theme='Adwaita'
+color-scheme='prefer-dark'
+font-name='Cantarell 11'
+document-font-name='Cantarell 11'
+monospace-font-name='Monospace 10'
+
+[org/gnome/desktop/wm/preferences]
+button-layout='appmenu:minimize,maximize,close'
+theme='Adwaita'
+titlebar-font='Cantarell Bold 11'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-options='zoom'
+primary-color='#418fde'
+secondary-color='#000000'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-options='zoom'
+primary-color='#418fde'
+secondary-color='#000000'
+EOF
+
+# Update dconf database
+dconf update || true
+
+# Install user-theme extension if not already installed
+if [ ! -d "/usr/share/gnome-shell/extensions/user-theme@gnome-shell-extensions.gcampax.github.com" ]; then
+  apt-get update
+  apt-get install -y gnome-shell-extensions
+fi
+
+# Enable user-theme extension
+mkdir -p /etc/dconf/db/local.d/locks
+cat > /etc/dconf/db/local.d/00-extensions << EOF
+[org/gnome/shell]
+enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com']
+EOF
+
+dconf update || true 

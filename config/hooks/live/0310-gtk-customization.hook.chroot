@@ -1,0 +1,213 @@
+#!/bin/sh
+
+# Install sassc for CSS compilation if not already installed
+apt-get update
+apt-get install -y sassc libglib2.0-dev-bin
+
+# Create directories for GTK theme customization
+mkdir -p /usr/share/themes/NabadOS/gtk-3.0
+mkdir -p /usr/share/themes/NabadOS/gtk-4.0
+
+# Create GTK3 theme files
+cat > /usr/share/themes/NabadOS/gtk-3.0/gtk.css << EOF
+/* NabadOS GTK3 Theme - Based on Soplang branding */
+
+/* Import the base Adwaita theme */
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk.css");
+
+/* Override accent colors */
+@define-color accent_color #418fde;
+@define-color accent_bg_color #418fde;
+@define-color accent_fg_color white;
+
+/* Override link colors */
+@define-color link_color #418fde;
+@define-color link_visited_color #3a75b5;
+
+/* Selection colors */
+@define-color selected_bg_color @accent_bg_color;
+@define-color selected_fg_color @accent_fg_color;
+
+/* Button styling */
+button.suggested-action {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+}
+
+button.suggested-action:hover {
+  background-color: shade(@accent_bg_color, 1.1);
+}
+
+button.suggested-action:active {
+  background-color: shade(@accent_bg_color, 0.9);
+}
+
+/* Header bar styling */
+headerbar {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+  border-bottom: 1px solid alpha(@accent_bg_color, 0.8);
+}
+
+headerbar button:not(:checked) {
+  color: @accent_fg_color;
+}
+
+headerbar button:hover:not(:checked) {
+  background-color: alpha(white, 0.15);
+}
+
+headerbar button:active:not(:checked),
+headerbar button:checked {
+  background-color: alpha(black, 0.2);
+  color: @accent_fg_color;
+}
+
+/* Progress bars and sliders */
+progressbar progress,
+scale highlight {
+  background-color: @accent_bg_color;
+}
+
+/* Switches */
+switch:checked {
+  background-color: @accent_bg_color;
+}
+
+/* Checkboxes and radio buttons */
+check:checked,
+radio:checked {
+  background-color: @accent_bg_color;
+}
+EOF
+
+# Create GTK4 theme files
+cat > /usr/share/themes/NabadOS/gtk-4.0/gtk.css << EOF
+/* NabadOS GTK4 Theme - Based on Soplang branding */
+
+/* Import the base Adwaita theme */
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk.css");
+
+/* Override accent colors */
+@define-color accent_color #418fde;
+@define-color accent_bg_color #418fde;
+@define-color accent_fg_color white;
+
+/* Override link colors */
+@define-color link_color #418fde;
+@define-color link_visited_color #3a75b5;
+
+/* Selection colors */
+@define-color selected_bg_color @accent_bg_color;
+@define-color selected_fg_color @accent_fg_color;
+
+/* Button styling */
+button.suggested-action {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+}
+
+button.suggested-action:hover {
+  background-color: shade(@accent_bg_color, 1.1);
+}
+
+button.suggested-action:active {
+  background-color: shade(@accent_bg_color, 0.9);
+}
+
+/* Header bar styling */
+headerbar {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+  border-bottom: 1px solid alpha(@accent_bg_color, 0.8);
+}
+
+headerbar button:not(:checked) {
+  color: @accent_fg_color;
+}
+
+headerbar button:hover:not(:checked) {
+  background-color: alpha(white, 0.15);
+}
+
+headerbar button:active:not(:checked),
+headerbar button:checked {
+  background-color: alpha(black, 0.2);
+  color: @accent_fg_color;
+}
+
+/* Progress bars and sliders */
+progressbar progress,
+scale highlight {
+  background-color: @accent_bg_color;
+}
+
+/* Switches */
+switch:checked {
+  background-color: @accent_bg_color;
+}
+
+/* Checkboxes and radio buttons */
+check:checked,
+radio:checked {
+  background-color: @accent_bg_color;
+}
+EOF
+
+# Create gtk.gresource.xml for packaging
+cat > /tmp/gtk.gresource.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/gtk/libgtk/theme/NabadOS">
+    <file>gtk.css</file>
+  </gresource>
+</gresources>
+EOF
+
+# Compile the resources
+cd /usr/share/themes/NabadOS/gtk-3.0
+glib-compile-resources --target=gtk.gresource /tmp/gtk.gresource.xml
+cd /usr/share/themes/NabadOS/gtk-4.0
+glib-compile-resources --target=gtk.gresource /tmp/gtk.gresource.xml
+
+# Apply GTK theme settings for all users
+mkdir -p /etc/gtk-3.0
+cat > /etc/gtk-3.0/settings.ini << EOF
+[Settings]
+gtk-theme-name=NabadOS
+gtk-icon-theme-name=Adwaita
+gtk-font-name=Cantarell 11
+gtk-cursor-theme-name=Adwaita
+gtk-cursor-theme-size=24
+gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=1
+gtk-menu-images=1
+gtk-enable-event-sounds=1
+gtk-enable-input-feedback-sounds=0
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintslight
+gtk-application-prefer-dark-theme=1
+gtk-modules=gail:atk-bridge
+EOF
+
+# Update for GTK4 as well
+mkdir -p /etc/gtk-4.0
+cat > /etc/gtk-4.0/settings.ini << EOF
+[Settings]
+gtk-theme-name=NabadOS
+gtk-icon-theme-name=Adwaita
+gtk-font-name=Cantarell 11
+gtk-cursor-theme-name=Adwaita
+gtk-cursor-theme-size=24
+gtk-application-prefer-dark-theme=1
+EOF
+
+# Make the changes system-wide
+cat > /etc/dconf/db/local.d/02-gtk-theme << EOF
+[org/gnome/desktop/interface]
+gtk-theme='NabadOS'
+EOF
+
+dconf update || true 

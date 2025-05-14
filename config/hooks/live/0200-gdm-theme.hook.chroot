@@ -1,0 +1,99 @@
+#!/bin/sh
+
+# Create GDM custom.conf to allow modifications
+mkdir -p /etc/gdm3
+cat > /etc/gdm3/custom.conf << EOF
+# GDM configuration for NabadOS
+
+[daemon]
+# Enable the custom.css
+Theme=NabadOS
+
+[security]
+
+[xdmcp]
+
+[chooser]
+
+[debug]
+EOF
+
+# Create the GDM theme directory
+mkdir -p /usr/share/gdm/themes/NabadOS
+
+# Create the CSS styling for the login screen
+cat > /usr/share/gdm/themes/NabadOS/gnome-shell.css << EOF
+/* NabadOS GDM Theme */
+
+/* Background and panel styling */
+#lockDialogGroup {
+  background: #418fde;
+  background-image: url('file:///usr/share/backgrounds/nabados-login.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Login dialog styling */
+.login-dialog {
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.login-dialog-banner-view {
+  padding-top: 24px;
+  max-width: 600px;
+}
+
+.login-dialog-banner {
+  color: white;
+}
+
+.login-dialog-message-warning {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.login-dialog-prompt-layout {
+  padding: 16px 18px;
+}
+
+.login-dialog-user-list:expanded .login-dialog-user-list-item:selected {
+  background-color: #418fde;
+  color: white;
+}
+
+/* Buttons */
+.login-dialog-button, .login-dialog-button:focus {
+  padding: 4px 18px;
+  border-radius: 4px;
+  background-color: #418fde;
+  color: white;
+}
+
+.login-dialog-button:hover {
+  background-color: #5aa0e5;
+}
+
+.login-dialog-button:active {
+  background-color: #3a80c6;
+}
+EOF
+
+# Create graphical logo object for login screen
+mkdir -p /usr/share/icons/hicolor/256x256/emblems
+cp /usr/share/nabados/soplang-logo.png /usr/share/icons/hicolor/256x256/emblems/nabados-emblem.png
+
+# Update background settings for GDM
+mkdir -p /etc/dconf/db/gdm.d
+cat > /etc/dconf/db/gdm.d/01-logo-background << EOF
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/nabados-login.jpg'
+picture-options='zoom'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/nabados-login.jpg'
+picture-options='zoom'
+EOF
+
+# Update GDM dconf database
+dconf update || true 
