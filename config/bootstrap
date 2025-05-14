@@ -22,7 +22,7 @@ LB_DISTRIBUTION_BINARY="testing"
 LB_PARENT_DISTRIBUTION_BINARY="testing"
 
 # Select parent distribution for debian-installer to use
-LB_PARENT_DEBIAN_INSTALLER_DISTRIBUTION=""
+LB_PARENT_DEBIAN_INSTALLER_DISTRIBUTION="testing"
 
 # Select archive areas to use
 LB_ARCHIVE_AREAS="main"
