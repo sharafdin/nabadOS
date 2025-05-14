@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=NabadOS
+Description=NabadOS Plymouth theme with Soplang branding
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nabados
+ScriptFile=/usr/share/plymouth/themes/nabados/nabados.script 

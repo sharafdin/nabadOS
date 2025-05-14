@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Set NabadOS Plymouth theme as default
+update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/nabados/nabados.plymouth 100
+update-alternatives --set default.plymouth /usr/share/plymouth/themes/nabados/nabados.plymouth
+update-initramfs -u 

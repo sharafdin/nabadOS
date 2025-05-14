@@ -1,0 +1,52 @@
+// Background color (Soplang blue)
+Window.SetBackgroundTopColor(0.25, 0.56, 0.87);
+Window.SetBackgroundBottomColor(0.25, 0.56, 0.87);
+
+// Logo image
+logo.image = Image("logo.png");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
+logo.sprite.SetY(Window.GetHeight() / 2 - logo.image.GetHeight() / 2);
+
+// Progress bar - use Soplang blue
+progress_box.image = Image("progress_box.png");
+progress_box.sprite = Sprite(progress_box.image);
+progress_box.x = Window.GetWidth() / 2 - progress_box.image.GetWidth() / 2;
+progress_box.y = Window.GetHeight() * 0.75;
+progress_box.sprite.SetPosition(progress_box.x, progress_box.y);
+
+progress_bar.original_image = Image("progress_bar.png");
+progress_bar.sprite = Sprite();
+progress_bar.sprite.SetPosition(progress_box.x, progress_box.y);
+
+// Text - NabadOS
+text_image = Image.Text("NabadOS", 1, 1, 1);
+text_sprite = Sprite(text_image);
+text_sprite.SetPosition(Window.GetWidth() / 2 - text_image.GetWidth() / 2, Window.GetHeight() - text_image.GetHeight() * 2);
+
+progress = 0;
+
+fun refresh_callback ()
+{
+    if (Plymouth.GetMode() == "boot" || Plymouth.GetMode() == "resume")
+    {
+        progress_bar.image = progress_bar.original_image.Scale(progress_bar.original_image.GetWidth() * progress, progress_bar.original_image.GetHeight());
+        progress_bar.sprite.SetImage(progress_bar.image);
+    }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+fun progress_callback (duration, progress)
+{
+    progress = progress;
+}
+
+Plymouth.SetBootProgressFunction(progress_callback);
+
+fun quit_callback ()
+{
+    logo.sprite.SetOpacity(0);
+}
+
+Plymouth.SetQuitFunction(quit_callback); 

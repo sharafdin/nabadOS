@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Create required directories
+mkdir -p /usr/share/plymouth/themes/nabados
+
+# Copy Soplang logo to Plymouth theme directory
+cp /usr/share/nabados/soplang-logo.png /usr/share/plymouth/themes/nabados/logo.png
+
+# Create progress bar assets
+convert -size 300x10 xc:#2F72C0 /usr/share/plymouth/themes/nabados/progress_bar.png
+convert -size 300x10 -bordercolor white -border 1 xc:transparent /usr/share/plymouth/themes/nabados/progress_box.png 
