@@ -1,0 +1,9 @@
+/build
+/binary
+/cache
+/chroot
+*.log
+*.packages
+live-image-*
+*.iso
+*.squashfs
