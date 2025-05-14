@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Enable the first boot service
+systemctl enable nabados-first-boot.service 

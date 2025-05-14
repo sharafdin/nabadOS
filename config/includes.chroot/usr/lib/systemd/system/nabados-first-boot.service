@@ -1,0 +1,12 @@
+[Unit]
+Description=NabadOS First Boot Customization
+After=network.target systemd-user-sessions.service
+ConditionPathExists=!/var/lib/nabados/first-boot-done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nabados-first-boot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target 

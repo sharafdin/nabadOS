@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# NabadOS first boot customization script
+
+# Create marker directory
+mkdir -p /var/lib/nabados
+
+# Update system icon cache
+gtk-update-icon-cache -f /usr/share/icons/hicolor/ || true
+
+# Update MIME database
+update-mime-database /usr/share/mime || true
+
+# Update desktop database
+update-desktop-database || true
+
+# Set Firefox preferences for all users
+if [ -d "/etc/firefox/policies" ]; then
+  mkdir -p /etc/firefox/policies
+  cat > /etc/firefox/policies/policies.json << EOF
+{
+  "policies": {
+    "DisableTelemetry": true,
+    "OverrideFirstRunPage": "https://nabados.org/welcome",
+    "OverridePostUpdatePage": "https://nabados.org/welcome",
+    "Homepage": {
+      "URL": "https://nabados.org/",
+      "Locked": false,
+      "StartPage": "homepage"
+    },
+    "DisplayBookmarksToolbar": true,
+    "DisplayMenuBar": "default-off",
+    "NoDefaultBookmarks": true,
+    "ManagedBookmarks": [
+      {
+        "name": "NabadOS",
+        "children": [
+          {
+            "name": "NabadOS Homepage",
+            "url": "https://nabados.org/"
+          },
+          {
+            "name": "NabadOS Support",
+            "url": "https://support.nabados.org/"
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+fi
+
+# Update any remaining references to "debian" in system files
+find /usr/share/applications -name "*.desktop" -type f -exec sed -i 's/Debian/NabadOS/g' {} \;
+
+# Create marker file
+touch /var/lib/nabados/first-boot-done
+
+# Exit with success
+exit 0 
