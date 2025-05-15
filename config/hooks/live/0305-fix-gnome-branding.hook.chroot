@@ -1,0 +1,50 @@
+#!/bin/sh
+# Fix GNOME Desktop branding with dark theme
+
+# Set dark theme and accent color for GNOME
+mkdir -p /etc/dconf/db/local.d
+cat > /etc/dconf/db/local.d/01-theme-settings << EOF
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Adwaita-dark'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-options='zoom'
+primary-color='#418fde'
+secondary-color='#000000'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-options='zoom'
+primary-color='#418fde'
+secondary-color='#000000'
+
+# Set accent color if supported by GNOME version
+[org/gnome/desktop/interface]
+accent-color='#418fde'
+EOF
+
+# Update dconf database
+dconf update || true
+
+# Create About dialog branding
+mkdir -p /usr/share/gnome-control-center/pixmaps
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/gnome-control-center/pixmaps/about-logo.png
+
+# Further replace any references to Debian in desktop files
+find /usr/share/applications -name "*.desktop" -type f -exec sed -i 's/Debian/NabadOS/g' {} \; 2>/dev/null || true
+
+# Update OS info file to ensure consistency
+cat > /etc/os-release << EOF
+NAME="NabadOS"
+VERSION="1.0"
+ID=nabados
+ID_LIKE=debian
+PRETTY_NAME="NabadOS 1.0"
+VERSION_ID="1.0"
+HOME_URL="https://nabados.org/"
+SUPPORT_URL="https://support.nabados.org/"
+BUG_REPORT_URL="https://bugs.nabados.org/"
+EOF 

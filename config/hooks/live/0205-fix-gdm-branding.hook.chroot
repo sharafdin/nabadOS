@@ -1,0 +1,79 @@
+#!/bin/sh
+# Fix GDM login screen branding
+
+# Create GDM theme directory
+mkdir -p /usr/share/gdm/greeter/images
+
+# Create icon in expected location for user icon
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/gdm/greeter/images/logo.png
+
+# Set background for the login screen
+mkdir -p /etc/dconf/db/gdm.d
+cat > /etc/dconf/db/gdm.d/01-background << EOF
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/nabados-login.jpg'
+picture-options='zoom'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/nabados-login.jpg'
+picture-options='zoom'
+EOF
+
+# Replace default user icon
+mkdir -p /usr/share/icons/hicolor/scalable/apps
+cp -f /usr/share/nabados/soplang-logo.svg /usr/share/icons/hicolor/scalable/apps/system-users.svg
+
+# Update the login screen CSS to use custom styling
+mkdir -p /usr/share/gnome-shell/theme
+cat > /usr/share/gnome-shell/theme/gdm3.css << EOF
+/* Login dialog styling */
+.login-dialog {
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.login-dialog-banner-view {
+  padding-top: 24px;
+  max-width: 600px;
+}
+
+.login-dialog-banner {
+  color: white;
+}
+
+.login-dialog-message-warning {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.login-dialog-prompt-layout {
+  padding: 16px 18px;
+}
+
+.login-dialog-user-list:expanded .login-dialog-user-list-item:selected {
+  background-color: #418fde;
+  color: white;
+}
+
+/* Buttons */
+.login-dialog-button, .login-dialog-button:focus {
+  padding: 4px 18px;
+  border-radius: 4px;
+  background-color: #418fde;
+  color: white;
+}
+
+.login-dialog-button:hover {
+  background-color: #5aa0e5;
+}
+
+.login-dialog-button:active {
+  background-color: #3a80c6;
+}
+EOF
+
+# Update GDM dconf database
+dconf update || true
+
+# Replace Debian icon in GDM
+find /usr/share/icons -name "*debian*" -exec sh -c 'ln -sf /usr/share/nabados/soplang-logo.png {}' \; 2>/dev/null || true 
