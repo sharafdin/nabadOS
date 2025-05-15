@@ -1,0 +1,26 @@
+#!/bin/sh
+# Fix logo paths and ensure they exist in the correct locations
+
+# Create necessary directories
+mkdir -p /usr/share/nabados
+mkdir -p /usr/share/backgrounds
+
+# Copy the Soplang logo to the correct locations
+cp -f /soplang-logo/512\ x\ 512/512\ x\ 512-01.png /usr/share/nabados/soplang-logo.png
+cp -f /soplang-logo/soplong\ logo-01.svg /usr/share/nabados/soplang-logo.svg
+
+# Create a wallpaper with the logo
+convert -size 3840x2160 -define gradient:angle=45 gradient:#418fde-#2a5c8e \
+  /usr/share/nabados/soplang-logo.png -gravity center -composite \
+  /usr/share/backgrounds/nabados-wallpaper.jpg
+
+# Create darker login screen background
+convert -size 3840x2160 -define gradient:angle=45 gradient:#2a5c8e-#1a3652 \
+  /usr/share/nabados/soplang-logo.png -gravity center -composite \
+  /usr/share/backgrounds/nabados-login.jpg
+
+# Set permissions
+chmod 644 /usr/share/nabados/soplang-logo.png
+chmod 644 /usr/share/nabados/soplang-logo.svg
+chmod 644 /usr/share/backgrounds/nabados-wallpaper.jpg 
+chmod 644 /usr/share/backgrounds/nabados-login.jpg 
