@@ -1,0 +1,18 @@
+#!/bin/sh
+# Fix GRUB bootloader branding
+
+# Ensure the directory exists
+mkdir -p /boot/grub/themes/nabados
+
+# Use the correct Soplang logo path
+cp -f /usr/share/nabados/soplang-logo.png /boot/grub/themes/nabados/logo.png
+
+# Create a branded background using the correct brand color
+convert -size 1920x1080 -define gradient:angle=45 gradient:#418fde-#2a5c8e /boot/grub/themes/nabados/background.png
+
+# Make sure the GRUB config points to the correct theme
+if [ -f "/etc/default/grub" ]; then
+  sed -i 's#^GRUB_THEME=.*$#GRUB_THEME="/boot/grub/themes/nabados/theme.txt"#' /etc/default/grub
+  sed -i 's#^GRUB_BACKGROUND=.*$#GRUB_BACKGROUND="/boot/grub/themes/nabados/background.png"#' /etc/default/grub
+  update-grub || true
+fi 
