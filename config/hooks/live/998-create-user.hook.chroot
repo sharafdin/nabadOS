@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "[+] Creating default live user 'user'..."
+useradd -m -s /bin/bash user
