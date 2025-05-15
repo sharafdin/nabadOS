@@ -1,0 +1,78 @@
+#!/bin/sh
+# Fix the first boot hook to wait for user creation
+
+cat > /usr/lib/systemd/system/nabados-first-boot.service << EOF
+[Unit]
+Description=NabadOS First Boot Customization
+After=network.target systemd-user-sessions.service
+ConditionPathExists=!/var/lib/nabados/first-boot-done
+# Wait for display manager to be active to ensure user exists
+Requires=display-manager.service
+After=display-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nabados-first-boot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Update the first boot script to check for user existence
+cat > /usr/sbin/nabados-first-boot << EOF
+#!/bin/bash
+
+# NabadOS first boot customization script
+
+# Create marker directory
+mkdir -p /var/lib/nabados
+
+# Check if we're in a live session
+if [ -d "/home/user" ]; then
+  LIVEUSER="user"
+elif getent passwd | grep -q "debian"; then
+  LIVEUSER="debian"
+else
+  # Try to detect the live user from logged in users
+  LIVEUSER=\$(who | head -n1 | awk '{print \$1}')
+fi
+
+# Only proceed if we have found a valid user
+if [ -n "\$LIVEUSER" ] && id "\$LIVEUSER" > /dev/null 2>&1; then
+  echo "Customizing for user: \$LIVEUSER"
+  
+  # Set user desktop settings via dconf
+  if [ -d "/home/\$LIVEUSER" ]; then
+    sudo -u "\$LIVEUSER" DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u \$LIVEUSER)/bus gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+    sudo -u "\$LIVEUSER" DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u \$LIVEUSER)/bus gsettings set org.gnome.desktop.background picture-uri "file:///usr/share/backgrounds/nabados-wallpaper.jpg"
+    sudo -u "\$LIVEUSER" DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u \$LIVEUSER)/bus gsettings set org.gnome.desktop.background picture-uri-dark "file:///usr/share/backgrounds/nabados-wallpaper.jpg"
+  fi
+else
+  echo "No valid user found, deferring user customization"
+fi
+
+# Update system icon cache
+gtk-update-icon-cache -f /usr/share/icons/hicolor/ || true
+
+# Update MIME database
+update-mime-database /usr/share/mime || true
+
+# Update desktop database
+update-desktop-database || true
+
+# Update any remaining references to "debian" in system files
+find /usr/share/applications -name "*.desktop" -type f -exec sed -i 's/Debian/NabadOS/g' {} \;
+
+# Create marker file
+touch /var/lib/nabados/first-boot-done
+
+# Exit with success
+exit 0
+EOF
+
+# Fix permissions
+chmod +x /usr/sbin/nabados-first-boot
+
+# Ensure the service is enabled
+systemctl enable nabados-first-boot.service || true 
