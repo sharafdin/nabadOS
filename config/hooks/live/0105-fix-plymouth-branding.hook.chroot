@@ -1,0 +1,24 @@
+#!/bin/sh
+# Fix Plymouth splash screen branding
+
+# Ensure Plymouth theme directory exists
+mkdir -p /usr/share/plymouth/themes/nabados
+
+# Copy the logo to the Plymouth theme directory
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/plymouth/themes/nabados/logo.png
+
+# Create progress bar assets with the correct brand color
+convert -size 300x10 xc:#418fde /usr/share/plymouth/themes/nabados/progress_bar.png
+convert -size 300x10 -bordercolor white -border 1 xc:transparent /usr/share/plymouth/themes/nabados/progress_box.png
+
+# Make sure Plymouth theme is set as default
+if command -v plymouth-set-default-theme > /dev/null; then
+  plymouth-set-default-theme nabados || true
+else
+  # Alternative method if plymouth-set-default-theme is not available
+  update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/nabados/nabados.plymouth 100
+  update-alternatives --set default.plymouth /usr/share/plymouth/themes/nabados/nabados.plymouth
+fi
+
+# Update initramfs to include the Plymouth theme
+update-initramfs -u || true 
