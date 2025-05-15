@@ -1,0 +1,151 @@
+#!/bin/sh
+# Improved GNOME desktop theme with dark mode and accent color
+
+# Create directories for dconf settings
+mkdir -p /etc/dconf/db/local.d/
+mkdir -p /etc/dconf/profile/
+
+# Set desktop-wide dark theme and accent color
+cat > /etc/dconf/db/local.d/01-nabados-theme << EOF
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Adwaita-dark'
+icon-theme='Adwaita'
+cursor-theme='Adwaita'
+font-name='Cantarell 11'
+document-font-name='Cantarell 11'
+monospace-font-name='Source Code Pro 10'
+accent-color='#418fde'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/nabados-wallpaper-dark.jpg'
+picture-options='zoom'
+primary-color='#0c2d48'
+secondary-color='#000000'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-options='zoom'
+primary-color='#0c2d48'
+secondary-color='#000000'
+
+[org/gnome/desktop/wm/preferences]
+titlebar-font='Cantarell Bold 11'
+button-layout='appmenu:minimize,maximize,close'
+
+[org/gnome/shell]
+enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com']
+favorite-apps=['org.gnome.Settings.desktop', 'org.gnome.Nautilus.desktop', 'firefox-esr.desktop', 'org.gnome.Terminal.desktop']
+
+[org/gnome/shell/extensions/user-theme]
+name='Adwaita-dark'
+
+[org/gnome/settings-daemon/plugins/color]
+night-light-enabled=true
+night-light-temperature=3700
+EOF
+
+# Create dconf profile
+cat > /etc/dconf/profile/user << EOF
+user-db:user
+system-db:local
+EOF
+
+# Create GTK3 settings
+mkdir -p /etc/gtk-3.0
+cat > /etc/gtk-3.0/settings.ini << EOF
+[Settings]
+gtk-theme-name=Adwaita-dark
+gtk-icon-theme-name=Adwaita
+gtk-font-name=Cantarell 11
+gtk-cursor-theme-name=Adwaita
+gtk-cursor-theme-size=24
+gtk-toolbar-style=GTK_TOOLBAR_ICONS
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=1
+gtk-menu-images=1
+gtk-enable-event-sounds=1
+gtk-enable-input-feedback-sounds=0
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintslight
+gtk-application-prefer-dark-theme=1
+EOF
+
+# Create GTK4 settings
+mkdir -p /etc/gtk-4.0
+cat > /etc/gtk-4.0/settings.ini << EOF
+[Settings]
+gtk-theme-name=Adwaita-dark
+gtk-icon-theme-name=Adwaita
+gtk-font-name=Cantarell 11
+gtk-cursor-theme-name=Adwaita
+gtk-cursor-theme-size=24
+gtk-application-prefer-dark-theme=1
+EOF
+
+# Create About info branding
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/gnome-control-center/pixmaps/about-logo.png
+
+# Update OS information
+cat > /etc/os-release << EOF
+PRETTY_NAME="NabadOS"
+NAME="NabadOS"
+VERSION_ID="1.0"
+VERSION="1.0"
+VERSION_CODENAME=nabados
+ID=nabados
+HOME_URL="https://soplanglang.com/"
+SUPPORT_URL="https://soplanglang.com/support"
+BUG_REPORT_URL="https://soplanglang.com/bugs"
+EOF
+
+# Update LSB release info
+cat > /etc/lsb-release << EOF
+DISTRIB_ID=NabadOS
+DISTRIB_RELEASE=1.0
+DISTRIB_CODENAME=nabados
+DISTRIB_DESCRIPTION="NabadOS 1.0"
+EOF
+
+# Replace any remaining Debian references in application files
+find /usr/share/applications -name "*.desktop" -type f -exec sed -i 's/Debian/NabadOS/g' {} \;
+
+# Apply dark mode theme to user templates
+mkdir -p /etc/skel/.config/gtk-3.0
+cat > /etc/skel/.config/gtk-3.0/settings.ini << EOF
+[Settings]
+gtk-application-prefer-dark-theme=1
+gtk-theme-name=Adwaita-dark
+gtk-icon-theme-name=Adwaita
+gtk-cursor-theme-name=Adwaita
+EOF
+
+mkdir -p /etc/skel/.config/gtk-4.0
+cat > /etc/skel/.config/gtk-4.0/settings.ini << EOF
+[Settings]
+gtk-application-prefer-dark-theme=1
+gtk-theme-name=Adwaita-dark
+gtk-icon-theme-name=Adwaita
+gtk-cursor-theme-name=Adwaita
+EOF
+
+# Set dconf settings for new users
+mkdir -p /etc/skel/.config/dconf
+cat > /etc/skel/.config/dconf/user.txt << EOF
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Adwaita-dark'
+accent-color='#418fde'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/nabados-wallpaper-dark.jpg'
+EOF
+
+# Compile dconf settings for new users
+dconf compile /etc/skel/.config/dconf/user /etc/skel/.config/dconf/user.txt
+
+# Update system dconf database
+dconf update || true 

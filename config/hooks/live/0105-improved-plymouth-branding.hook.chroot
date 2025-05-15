@@ -1,0 +1,80 @@
+#!/bin/sh
+# Improved Plymouth boot screen branding with Soplang icon-only logo
+
+# Create necessary Plymouth theme directories
+mkdir -p /usr/share/plymouth/themes/nabados
+mkdir -p /usr/share/plymouth/themes/spinner
+
+# Copy Soplang logo for boot screen
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/plymouth/themes/nabados/logo.png
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/plymouth/themes/nabados/watermark.png
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/plymouth/themes/spinner/watermark.png
+
+# Create a dark blue background for the boot screen with logo
+convert -size 1920x1080 xc:"#0c2d48" /usr/share/nabados/soplang-logo.png -gravity center -composite /usr/share/plymouth/themes/nabados/nabados-background.png
+
+# Create the NabadOS Plymouth theme file
+cat > /usr/share/plymouth/themes/nabados/nabados.plymouth << EOF
+[Plymouth Theme]
+Name=NabadOS
+Description=NabadOS Plymouth Theme with Soplang branding
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nabados
+ScriptFile=/usr/share/plymouth/themes/spinner/spinner.script
+EOF
+
+# Create theme script file for NabadOS
+cat > /usr/share/plymouth/themes/nabados/nabados.script << EOF
+wallpaper_image = Image("nabados-background.png");
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+if (Plymouth.GetMode() == "shutdown")
+{
+  wallpaper_scaled = wallpaper_image.Scale(screen_width, screen_height);
+  wallpaper_sprite = Sprite(wallpaper_scaled);
+  wallpaper_sprite.SetZ(-100);
+}
+else
+{
+  logo_image = Image("logo.png");
+  logo_sprite = Sprite(logo_image);
+  logo_sprite.SetX(Window.GetWidth() / 2 - logo_image.GetWidth() / 2);
+  logo_sprite.SetY(Window.GetHeight() / 2 - logo_image.GetHeight() / 2);
+  
+  progress = 0;
+  
+  fun pulse_callback(time)
+  {
+    progress += 0.01;
+    if (progress > 1)
+      progress = 0;
+    logo_sprite.SetOpacity(0.7 + (Math.Sin(progress * Math.Pi * 2) + 1) / 4);
+    return 1;
+  }
+  
+  Plymouth.SetRefreshFunction(pulse_callback);
+}
+
+# Message text display
+message_sprite = Sprite();
+message_sprite.SetPosition(screen_width * 0.5, screen_height * 0.95, 10000);
+
+fun display_message(text)
+{
+  my_image = Image.Text(text, 1, 1, 1);
+  message_sprite.SetImage(my_image);
+}
+
+Plymouth.SetDisplayMessageFunction(display_message);
+EOF
+
+# Set NabadOS Plymouth theme as default
+plymouth-set-default-theme nabados || true
+update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/nabados/nabados.plymouth 100 || true
+update-alternatives --set default.plymouth /usr/share/plymouth/themes/nabados/nabados.plymouth || true
+
+# Update initramfs to include our theme
+update-initramfs -u || true 

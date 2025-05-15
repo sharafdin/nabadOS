@@ -1,0 +1,96 @@
+#!/bin/sh
+# Improved GRUB bootloader branding with Soplang icon-only logo
+
+# Create GRUB themes directory
+mkdir -p /boot/grub/themes/nabados
+
+# Copy Soplang logo for GRUB
+cp -f /usr/share/nabados/soplang-logo.png /boot/grub/themes/nabados/logo.png
+
+# Create a dark blue background for GRUB
+convert -size 1920x1080 xc:"#0c2d48" /usr/share/nabados/soplang-logo.png -gravity center -composite /boot/grub/themes/nabados/background.png
+
+# Create GRUB theme configuration
+cat > /boot/grub/themes/nabados/theme.txt << EOF
+# NabadOS GRUB2 Theme
+
+# Global settings
+title-text: ""
+desktop-image: "background.png"
+desktop-color: "#0c2d48"
+terminal-box: "terminal_box_*.png"
+terminal-font: "Unifont Regular 16"
+
+# Show logo
++ image {
+    id = "__nabados_logo__"
+    left = 50%-32
+    top = 50%-32
+    file = "logo.png"
+}
+
+# Boot menu
++ boot_menu {
+    left = 15%
+    width = 70%
+    top = 65%
+    height = 30%
+    item_color = "#cccccc"
+    selected_item_color = "#ffffff"
+    item_height = 32
+    item_padding = 8
+    item_spacing = 10
+    selected_item_pixmap_style = "select_*.png"
+}
+
+# Countdown label
++ label {
+    id = "__timeout__"
+    left = 35%
+    width = 30%
+    top = 95%
+    height = 30
+    text = "Booting in %d seconds"
+    color = "#418fde"
+    align = "center"
+}
+EOF
+
+# Create select images
+mkdir -p /boot/grub/themes/nabados/select/
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_c.png
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_n.png
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_ne.png
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_e.png
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_se.png
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_s.png
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_sw.png
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_w.png
+convert -size 1x1 xc:"#418fde" /boot/grub/themes/nabados/select_nw.png
+
+# Terminal box
+mkdir -p /boot/grub/themes/nabados/terminal_box/
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_c.png
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_n.png
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_ne.png
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_e.png
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_se.png
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_s.png
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_sw.png
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_w.png
+convert -size 1x1 xc:"rgba(12,45,72,0.8)" /boot/grub/themes/nabados/terminal_box_nw.png
+
+# Update GRUB configuration
+cat > /etc/default/grub.d/99_nabados_theme.cfg << EOF
+# NabadOS GRUB theme settings
+GRUB_BACKGROUND="/boot/grub/themes/nabados/background.png"
+GRUB_THEME="/boot/grub/themes/nabados/theme.txt"
+GRUB_GFXMODE="auto"
+GRUB_COLOR_NORMAL="white/black"
+GRUB_COLOR_HIGHLIGHT="white/blue"
+GRUB_DISTRIBUTOR="NabadOS"
+GRUB_TIMEOUT=5
+EOF
+
+# Update GRUB
+update-grub || true 

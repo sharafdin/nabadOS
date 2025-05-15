@@ -1,0 +1,126 @@
+#!/bin/sh
+# Improved script for GDM login screen with Soplang branding
+
+# Create necessary directories
+mkdir -p /usr/share/gdm/
+mkdir -p /usr/share/gdm/greeter/images/
+mkdir -p /etc/dconf/db/gdm.d/
+mkdir -p /etc/dconf/profile/
+mkdir -p /usr/share/gnome-shell/theme/
+
+# Copy Soplang logo files to GDM locations
+cp -f /usr/share/nabados/soplang-logo.svg /usr/share/gdm/greeter/images/
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/gdm/greeter/images/
+ln -sf /usr/share/nabados/soplang-logo.svg /usr/share/gdm/greeter/images/debian-logo.svg
+ln -sf /usr/share/nabados/soplang-logo.svg /usr/share/gdm/greeter/images/distributor-logo.svg
+ln -sf /usr/share/nabados/soplang-logo.svg /usr/share/gdm/greeter/images/logo.svg
+
+# Update system-users icons with Soplang logo (shown in the GDM login screen)
+cp -f /usr/share/nabados/soplang-logo.svg /usr/share/icons/hicolor/scalable/apps/system-users.svg
+cp -f /usr/share/nabados/soplang-logo.svg /usr/share/icons/hicolor/scalable/apps/avatar-default.svg
+cp -f /usr/share/nabados/soplang-logo.svg /usr/share/icons/hicolor/symbolic/apps/system-users-symbolic.svg
+
+# Set login screen background
+cat > /etc/dconf/db/gdm.d/01-login-background << EOF
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/nabados-wallpaper-dark.jpg'
+picture-options='zoom'
+primary-color='#0c2d48'
+secondary-color='#000000'
+
+[org/gnome/desktop/interface]
+gtk-theme='Adwaita-dark'
+color-scheme='prefer-dark'
+accent-color='#418fde'
+EOF
+
+# Create GDM dconf profile
+cat > /etc/dconf/profile/gdm << EOF
+user-db:user
+system-db:gdm
+file-db:/usr/share/gdm/greeter-dconf-defaults
+EOF
+
+# Create a custom CSS for GDM to style our login dialog
+cat > /usr/share/gnome-shell/theme/gdm3.css << EOF
+/* GDM login theme for NabadOS */
+.login-dialog {
+  background-color: rgba(12, 45, 72, 0.8); /* Dark blue with opacity */
+  border-radius: 8px;
+  border: 1px solid rgba(65, 143, 222, 0.3); /* Accent color with low opacity */
+}
+
+.login-dialog-user-list:scrollbar {
+  background-color: rgba(12, 45, 72, 0.8);
+  border-radius: 8px;
+}
+
+.login-dialog-banner-view {
+  padding-top: 24px;
+  max-width: 600px;
+}
+
+.login-dialog-banner-view .login-dialog-banner-view-icon {
+  width: 80px;
+  height: 80px;
+  background-size: contain;
+  background-image: url("resource:///org/gnome/shell/theme/user-avatar.png");
+}
+
+.login-dialog-button {
+  color: white;
+  background-color: rgba(65, 143, 222, 0.8); /* Our accent color */
+  border-radius: 4px;
+  transition: all 200ms ease-in-out;
+}
+
+.login-dialog-button:hover {
+  background-color: rgba(65, 143, 222, 0.95);
+}
+
+.login-dialog-user-list-item {
+  color: white;
+  background-color: transparent;
+  border-radius: 8px;
+  padding: 8px;
+  margin: 4px 0;
+  transition: all 200ms ease-in-out;
+}
+
+.login-dialog-user-list-item:hover {
+  background-color: rgba(65, 143, 222, 0.2);
+}
+
+.login-dialog-user-list-item:focus {
+  background-color: rgba(65, 143, 222, 0.3);
+}
+
+.login-dialog-user-list-item .user-icon {
+  background-image: url("resource:///org/gnome/shell/theme/user-avatar.png");
+  background-size: contain;
+  border-radius: 32px;
+  border: 2px solid rgba(65, 143, 222, 0.5);
+}
+EOF
+
+# Copy the logo for the user avatar in the login screen
+cp -f /usr/share/nabados/soplang-logo.png /usr/share/gnome-shell/theme/user-avatar.png
+
+# Update GDM config in AccountsService
+mkdir -p /var/lib/AccountsService/icons/
+cp -f /usr/share/nabados/soplang-logo.png /var/lib/AccountsService/icons/
+
+# Ensure GDM uses our dark theme and accent color
+cat > /etc/dconf/db/gdm.d/02-shell-theme << EOF
+[org/gnome/shell/theme]
+name='Adwaita-dark'
+
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Adwaita-dark'
+accent-color='#418fde'
+EOF
+
+# Update dconf database
+dconf update || true 

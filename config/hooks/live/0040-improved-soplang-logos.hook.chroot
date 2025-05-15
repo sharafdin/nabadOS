@@ -1,0 +1,74 @@
+#!/bin/sh
+# Improved script to properly configure Soplang logo files
+
+# Create the central directory for all NabadOS branding assets
+mkdir -p /usr/share/nabados/
+
+# Create required directories for system branding
+mkdir -p /usr/share/pixmaps/
+mkdir -p /usr/share/icons/hicolor/scalable/places/
+mkdir -p /usr/share/icons/hicolor/scalable/apps/
+mkdir -p /usr/share/backgrounds/
+mkdir -p /usr/share/plymouth/themes/nabados/
+
+# Copy the icon-only logo (preferring the circular one) to central branding location
+cp -f /soplang-logo/logo-icon.svg /usr/share/nabados/soplang-logo.svg
+cp -f /soplang-logo/logo-icon.png /usr/share/nabados/soplang-logo.png
+
+# Replace Debian logos with Soplang logos in system locations
+cp -f /soplang-logo/logo-icon.svg /usr/share/pixmaps/debian-logo.svg
+cp -f /soplang-logo/logo-icon.svg /usr/share/pixmaps/debian-logo-text.svg
+cp -f /soplang-logo/logo-icon.svg /usr/share/pixmaps/nabados-logo.svg
+cp -f /soplang-logo/logo-icon.png /usr/share/pixmaps/debian-logo.png
+cp -f /soplang-logo/logo-icon.png /usr/share/pixmaps/nabados-logo.png
+
+# Copy to various icon locations
+cp -f /soplang-logo/logo-icon.svg /usr/share/icons/hicolor/scalable/places/start-here.svg
+cp -f /soplang-logo/logo-icon.svg /usr/share/icons/hicolor/scalable/places/distributor-logo.svg
+cp -f /soplang-logo/logo-icon.svg /usr/share/icons/hicolor/scalable/places/debian-logo.svg
+cp -f /soplang-logo/logo-icon.svg /usr/share/icons/hicolor/scalable/apps/debian-logo.svg
+cp -f /soplang-logo/logo-icon.svg /usr/share/icons/hicolor/scalable/apps/distributor-logo.svg
+cp -f /soplang-logo/logo-icon.svg /usr/share/icons/hicolor/scalable/apps/start-here.svg
+
+# Copy various sizes to appropriate directories
+for size in 16 24 32 48 64 96 128 256; do
+  mkdir -p /usr/share/icons/hicolor/${size}x${size}/places/
+  mkdir -p /usr/share/icons/hicolor/${size}x${size}/apps/
+  
+  # Try to find matching size, fallback to base logo
+  if [ -f "/soplang-logo/${size}x${size}/logo-icon.png" ]; then
+    LOGO_FILE="/soplang-logo/${size}x${size}/logo-icon.png"
+  else
+    LOGO_FILE="/soplang-logo/logo-icon.png"
+  fi
+  
+  cp -f "$LOGO_FILE" /usr/share/icons/hicolor/${size}x${size}/places/start-here.png
+  cp -f "$LOGO_FILE" /usr/share/icons/hicolor/${size}x${size}/places/distributor-logo.png
+  cp -f "$LOGO_FILE" /usr/share/icons/hicolor/${size}x${size}/places/debian-logo.png
+  cp -f "$LOGO_FILE" /usr/share/icons/hicolor/${size}x${size}/apps/debian-logo.png
+  cp -f "$LOGO_FILE" /usr/share/icons/hicolor/${size}x${size}/apps/distributor-logo.png
+  cp -f "$LOGO_FILE" /usr/share/icons/hicolor/${size}x${size}/apps/start-here.png
+done
+
+# Create wallpapers with the Soplang logo
+# Dark blue background (#0c2d48) with logo
+convert -size 1920x1080 xc:"#0c2d48" /soplang-logo/logo-icon.png -gravity center -composite /usr/share/backgrounds/nabados-wallpaper.jpg
+convert -size 1920x1080 xc:"#0c2d48" /soplang-logo/logo-icon.png -gravity center -composite /usr/share/backgrounds/nabados-wallpaper-dark.jpg
+convert -size 1920x1080 xc:"#0c2d48" /soplang-logo/logo-icon.png -gravity center -composite /usr/share/plymouth/themes/nabados/nabados-logo.png
+
+# Copy logo for Plymouth theme
+cp -f /soplang-logo/logo-icon.png /usr/share/plymouth/themes/nabados/logo.png
+
+# Create symbolic links to replace any remaining Debian logos
+ln -sf /usr/share/nabados/soplang-logo.svg /usr/share/plymouth/themes/spinner/watermark.svg || true
+ln -sf /usr/share/nabados/soplang-logo.png /usr/share/plymouth/themes/spinner/watermark.png || true
+
+# Set permissions
+chmod 644 /usr/share/backgrounds/nabados-wallpaper.jpg
+chmod 644 /usr/share/backgrounds/nabados-wallpaper-dark.jpg
+chmod 644 /usr/share/plymouth/themes/nabados/nabados-logo.png
+chmod 644 /usr/share/nabados/soplang-logo.svg
+chmod 644 /usr/share/nabados/soplang-logo.png
+
+# Update icon cache
+gtk-update-icon-cache -f /usr/share/icons/hicolor/ || true 

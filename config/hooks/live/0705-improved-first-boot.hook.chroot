@@ -1,0 +1,141 @@
+#!/bin/sh
+# Improved first boot service with reliable user customization
+
+# Create service file
+mkdir -p /usr/lib/systemd/system
+cat > /usr/lib/systemd/system/nabados-first-boot.service << EOF
+[Unit]
+Description=NabadOS First Boot Customization
+After=network.target systemd-user-sessions.service display-manager.service
+ConditionPathExists=!/var/lib/nabados/first-boot-done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nabados-first-boot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create first boot script with improved user detection
+cat > /usr/sbin/nabados-first-boot << EOF
+#!/bin/bash
+
+# NabadOS first boot customization script
+
+# Create marker directory
+mkdir -p /var/lib/nabados
+
+# Detect live session user
+detect_user() {
+  for user in user debian live liveuser; do
+    if id "\$user" &>/dev/null; then
+      echo "\$user"
+      return 0
+    fi
+  done
+
+  # Try to find any non-system user
+  for user in \$(getent passwd | grep -v "nologin\|false" | grep -E "/home/" | cut -d: -f1); do
+    if id "\$user" &>/dev/null; then
+      echo "\$user"
+      return 0
+    fi
+  done
+
+  # Last resort - try logged in users
+  local loggedin=\$(who | head -n1 | awk '{print \$1}')
+  if [ -n "\$loggedin" ]; then
+    echo "\$loggedin"
+    return 0
+  fi
+
+  return 1
+}
+
+# Get the live user
+LIVEUSER=\$(detect_user)
+
+# Only proceed if we have found a valid user
+if [ -n "\$LIVEUSER" ] && id "\$LIVEUSER" > /dev/null 2>&1; then
+  echo "Customizing for user: \$LIVEUSER"
+  
+  # Set user desktop settings via dconf
+  if [ -d "/home/\$LIVEUSER" ]; then
+    USER_ID=\$(id -u \$LIVEUSER)
+    USER_RUNTIME_DIR="/run/user/\$USER_ID"
+    
+    # Make sure we create the user directories if they don't exist
+    mkdir -p "\$USER_RUNTIME_DIR" 2>/dev/null
+    chown \$LIVEUSER:\$LIVEUSER "\$USER_RUNTIME_DIR" 2>/dev/null
+    
+    # Ensure the DBUS session exists for the user
+    if [ -e "\$USER_RUNTIME_DIR/bus" ]; then
+      # Apply user settings
+      sudo -u "\$LIVEUSER" DBUS_SESSION_BUS_ADDRESS="unix:path=\$USER_RUNTIME_DIR/bus" \
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+      
+      sudo -u "\$LIVEUSER" DBUS_SESSION_BUS_ADDRESS="unix:path=\$USER_RUNTIME_DIR/bus" \
+        gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'
+        
+      sudo -u "\$LIVEUSER" DBUS_SESSION_BUS_ADDRESS="unix:path=\$USER_RUNTIME_DIR/bus" \
+        gsettings set org.gnome.desktop.interface accent-color '#418fde'
+      
+      sudo -u "\$LIVEUSER" DBUS_SESSION_BUS_ADDRESS="unix:path=\$USER_RUNTIME_DIR/bus" \
+        gsettings set org.gnome.desktop.background picture-uri "file:///usr/share/backgrounds/nabados-wallpaper.jpg"
+      
+      sudo -u "\$LIVEUSER" DBUS_SESSION_BUS_ADDRESS="unix:path=\$USER_RUNTIME_DIR/bus" \
+        gsettings set org.gnome.desktop.background picture-uri-dark "file:///usr/share/backgrounds/nabados-wallpaper.jpg"
+    else
+      # Create user config directly
+      mkdir -p /home/\$LIVEUSER/.config/dconf
+      cat > /home/\$LIVEUSER/.config/dconf/user.txt << USERCONF
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Adwaita-dark'
+accent-color='#418fde'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/nabados-wallpaper.jpg'
+USERCONF
+
+      # Compile and set permission
+      dconf compile /home/\$LIVEUSER/.config/dconf/user /home/\$LIVEUSER/.config/dconf/user.txt
+      chown -R \$LIVEUSER:\$LIVEUSER /home/\$LIVEUSER/.config
+    fi
+  fi
+else
+  echo "No valid user found, deferring user customization"
+fi
+
+# Update system icon cache
+gtk-update-icon-cache -f /usr/share/icons/hicolor/ || true
+
+# Update MIME database
+update-mime-database /usr/share/mime || true
+
+# Update desktop database
+update-desktop-database || true
+
+# Update any remaining references to "debian" in system files
+find /usr/share/applications -name "*.desktop" -type f -exec sed -i 's/Debian/NabadOS/g' {} \;
+
+# Replace GDM user icon if it still shows Debian
+if [ -d "/var/lib/AccountsService/icons" ]; then
+  cp -f /usr/share/nabados/soplang-logo.png /var/lib/AccountsService/icons/\$LIVEUSER
+fi
+
+# Create marker file
+touch /var/lib/nabados/first-boot-done
+
+# Exit with success
+exit 0
+EOF
+
+# Fix permissions
+chmod +x /usr/sbin/nabados-first-boot
+
+# Ensure the service is enabled
+systemctl enable nabados-first-boot.service || true 
